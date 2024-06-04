@@ -112,12 +112,17 @@
        (into-array CopyOption)))
 
 (defn make-permissions
-  "Generate a array of `FileAttribute` instances
-  generated from `rwxr-xr-x` kind of expressions."
+  "Generate an array of `FileAttribute` instances
+  generated from `rwxr-xr-x` kind of expressions,
+  compatible with systems that support POSIX file permissions."
   [^String expr]
-  (let [perms (PosixFilePermissions/fromString expr)
-        attr  (PosixFilePermissions/asFileAttribute perms)]
-    (into-array FileAttribute [attr])))
+  (if (.startsWith (System/getProperty "os.name") "Windows")
+    (do
+      (println "POSIX permissions are not supported on Windows.")
+      (into-array FileAttribute []))  ; Return an empty array on Windows
+    (let [perms (PosixFilePermissions/fromString expr)
+          attr  (PosixFilePermissions/asFileAttribute perms)]
+      (into-array FileAttribute [attr]))))
 
 (defn path?
   "Return `true` if provided value is an instance of Path."
